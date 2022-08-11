@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/vercel/turborepo/cli/internal/cmd"
 	"github.com/vercel/turborepo/cli/internal/cmd/auth"
 	"github.com/vercel/turborepo/cli/internal/cmd/info"
 	"github.com/vercel/turborepo/cli/internal/config"
@@ -24,6 +25,12 @@ import (
 )
 
 func main() {
+	root := cmd.GetCmd()
+	err := root.Execute()
+	if err != nil {
+		panic(err)
+	}
+	os.Exit(0)
 	args := os.Args[1:]
 	heapFile := ""
 	traceFile := ""

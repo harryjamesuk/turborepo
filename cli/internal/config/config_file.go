@@ -3,6 +3,7 @@ package config
 import (
 	"os"
 
+	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"github.com/vercel/turborepo/cli/internal/client"
 	"github.com/vercel/turborepo/cli/internal/fs"
@@ -54,6 +55,10 @@ func (rc *RepoConfig) write() error {
 // afterwards, it needs to be re-initialized
 func (rc *RepoConfig) Delete() error {
 	return rc.path.Remove()
+}
+
+func AddUserConfigFlags(userConfig *TurborepoConfig, flags *pflag.FlagSet) {
+	flags.StringVar(&userConfig.ApiUrl, "api", userConfig.ApiUrl, "Set the endpoint for API calls")
 }
 
 // UserConfig is a wrapper around the user-specific configuration values

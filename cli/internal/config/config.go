@@ -37,11 +37,14 @@ type Config struct {
 	// Current Working Directory
 	Cwd fs.AbsolutePath
 
-	UsePreflight      bool
+	//UsePreflight      bool
+	ClientOpts        client.Opts
 	MaxClientFailures uint64
 
 	LoginURL string
 
+	Verbosity int
+}
 	UserConfig   *UserConfig
 	RepoConfig   *RepoConfig
 	RemoteConfig client.RemoteConfig
@@ -185,7 +188,7 @@ func ParseAndValidate(args []string, ui cli.Ui, turboVersion string, userConfigF
 		},
 		Cwd: cwd,
 
-		UsePreflight:      usePreflight,
+		ClientOpts:        client.Opts{UsePreflight: usePreflight},
 		MaxClientFailures: maxRemoteFailCount,
 	}
 	return c, nil
@@ -198,7 +201,7 @@ func (c *Config) NewClient() *client.ApiClient {
 		c.RemoteConfig,
 		c.Logger,
 		c.TurboVersion,
-		client.Opts{UsePreflight: c.UsePreflight},
+		c.ClientOpts,
 	)
 	return apiClient
 }

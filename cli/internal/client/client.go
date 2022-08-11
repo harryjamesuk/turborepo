@@ -17,6 +17,7 @@ import (
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-retryablehttp"
+	"github.com/spf13/pflag"
 	"github.com/vercel/turborepo/cli/internal/util"
 )
 
@@ -59,6 +60,10 @@ type RemoteConfig struct {
 // Opts holds values for configuring the behavior of the API client
 type Opts struct {
 	UsePreflight bool
+}
+
+func AddFlags(opts *Opts, flags *pflag.FlagSet) {
+	flags.BoolVar(&opts.UsePreflight, "preflight", false, "When enabled, turbo will precede HTTP requests with an OPTIONS request for authorization")
 }
 
 // New creates a new ApiClient

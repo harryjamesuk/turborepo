@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"github.com/vercel/turborepo/cli/cmdutil"
 	"github.com/vercel/turborepo/cli/internal/client"
 	"github.com/vercel/turborepo/cli/internal/config"
 	"github.com/vercel/turborepo/cli/internal/fs"
@@ -49,7 +50,11 @@ type linkAPIClient interface {
 	GetCachingStatus() (util.CachingStatus, error)
 }
 
-func getCmd(config *config.Config, ui cli.Ui) *cobra.Command {
+func NewLinkCommand(helper *cmdutil.Helper) *cobra.Command {
+	return getCmd(helper)
+}
+
+func getCmd(helper *cmdutil.Helper) *cobra.Command {
 	var dontModifyGitIgnore bool
 	cmd := &cobra.Command{
 		Use:           "turbo link",
@@ -57,14 +62,15 @@ func getCmd(config *config.Config, ui cli.Ui) *cobra.Command {
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			apiClient := config.NewClient()
+			// apiClient := config.NewClient()
 			link := &link{
-				ui:                  ui,
-				logger:              config.Logger,
-				cwd:                 config.Cwd,
+				ui:                  helper.UI,
+				logger:              helper.Logger,
+				cwd:                 helper.RepoRoot,
 				modifyGitIgnore:     !dontModifyGitIgnore,
 				repoConfig:          config.RepoConfig,
-				apiClient:           apiClient,
+				apiURL:              helper.UserConfig.ApiUrl,
+				apiClient:           helper.ApiClient,
 				promptSetup:         promptSetup,
 				promptTeam:          promptTeam,
 				promptEnableCaching: promptEnableCaching,
@@ -73,9 +79,9 @@ func getCmd(config *config.Config, ui cli.Ui) *cobra.Command {
 			err := link.run()
 			if err != nil {
 				if errors.Is(err, errUserCanceled) {
-					ui.Info("Canceled. Turborepo not set up.")
+					helper.UI.Info("Canceled. Turborepo not set up.")
 				} else if errors.Is(err, errTryAfterEnable) || errors.Is(err, errNeedCachingEnabled) || errors.Is(err, errOverage) {
-					ui.Info("Remote Caching not enabled. Please run 'turbo login' again after Remote Caching has been enabled")
+					helper.UI.Info("Remote Caching not enabled. Please run 'turbo login' again after Remote Caching has been enabled")
 				} else {
 					link.logError(err)
 				}
@@ -90,19 +96,19 @@ func getCmd(config *config.Config, ui cli.Ui) *cobra.Command {
 
 // Synopsis of link command
 func (c *LinkCommand) Synopsis() string {
-	cmd := getCmd(c.Config, c.Ui)
+	cmd := getCmd(cmdutil.NewHelper(c.Config, c.Ui))
 	return cmd.Short
 }
 
 // Help returns information about the `link` command
 func (c *LinkCommand) Help() string {
-	cmd := getCmd(c.Config, c.Ui)
+	cmd := getCmd(cmdutil.NewHelper(c.Config, c.Ui))
 	return util.HelpForCobraCmd(cmd)
 }
 
 // Run links a local directory to a Vercel organization and enables remote caching
 func (c *LinkCommand) Run(args []string) int {
-	cmd := getCmd(c.Config, c.Ui)
+	cmd := getCmd(cmdutil.NewHelper(c.Config, c.Ui))
 	cmd.SetArgs(args)
 	err := cmd.Execute()
 	if err != nil {
