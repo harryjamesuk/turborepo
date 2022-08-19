@@ -2,17 +2,15 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/vercel/turborepo/cli/internal/client"
+	"github.com/vercel/turborepo/cli/cmdutil"
+	"github.com/vercel/turborepo/cli/internal/cmd/info"
 	"github.com/vercel/turborepo/cli/internal/config"
-	"github.com/vercel/turborepo/cli/internal/fs"
+	"github.com/vercel/turborepo/cli/internal/login"
 )
 
-func GetCmd() *cobra.Command {
-	cfg := &config.Config{}
-	repoRoot, err := fs.GetCwd()
-	if err != nil {
-		// If we cannot get the cwd, bail early
-		panic(err)
+func GetCmd(turboVersion string) *cobra.Command {
+	cfg := &config.Config{
+		TurboVersion: turboVersion,
 	}
 	cmd := &cobra.Command{
 		Use:              "turbo",
@@ -20,9 +18,11 @@ func GetCmd() *cobra.Command {
 		TraverseChildren: true,
 	}
 	flags := cmd.PersistentFlags()
-	fs.AbsolutePathVar(flags, &cfg.Cwd, "cwd", repoRoot, "Specify the directory to run turbo in", repoRoot.ToString())
-	client.AddFlags(&cfg.ClientOpts, flags)
+	//client.AddFlags(&cfg.ClientOpts, flags)
 	config.AddUserConfigFlags(&cfg.UserConfig, flags)
-	flags.CountVarP(&cfg.Verbosity, "verbosity", "v", "verbosity")
+	helper := cmdutil.NewHelper()
+	helper.AddFlags(flags)
+	cmd.AddCommand(login.NewLinkCommand(helper))
+	cmd.AddCommand(info.BinCmd(helper))
 	return cmd
 }

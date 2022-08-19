@@ -9,7 +9,6 @@ import (
 
 	"github.com/vercel/turborepo/cli/internal/cmd"
 	"github.com/vercel/turborepo/cli/internal/cmd/auth"
-	"github.com/vercel/turborepo/cli/internal/cmd/info"
 	"github.com/vercel/turborepo/cli/internal/config"
 	"github.com/vercel/turborepo/cli/internal/daemon"
 	"github.com/vercel/turborepo/cli/internal/login"
@@ -25,7 +24,7 @@ import (
 )
 
 func main() {
-	root := cmd.GetCmd()
+	root := cmd.GetCmd(turboVersion)
 	err := root.Execute()
 	if err != nil {
 		panic(err)
@@ -83,9 +82,9 @@ func main() {
 		"prune": func() (cli.Command, error) {
 			return &prune.PruneCommand{Config: cf, Ui: ui}, nil
 		},
-		"link": func() (cli.Command, error) {
-			return &login.LinkCommand{Config: cf, Ui: ui}, nil
-		},
+		// "link": func() (cli.Command, error) {
+		// 	return &login.LinkCommand{Config: cf, Ui: ui}, nil
+		// },
 		"unlink": func() (cli.Command, error) {
 			return &auth.UnlinkCommand{Config: cf, UI: ui}, nil
 		},
@@ -95,9 +94,9 @@ func main() {
 		"logout": func() (cli.Command, error) {
 			return &auth.LogoutCommand{Config: cf, UI: ui}, nil
 		},
-		"bin": func() (cli.Command, error) {
-			return &info.BinCommand{Config: cf, UI: ui}, nil
-		},
+		// "bin": func() (cli.Command, error) {
+		// 	return &info.BinCommand{Config: cf, UI: ui}, nil
+		// },
 		"daemon": func() (cli.Command, error) {
 			return &daemon.Command{Config: cf, UI: ui, SignalWatcher: signalWatcher}, nil
 		},

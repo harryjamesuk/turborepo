@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/hashicorp/go-hclog"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/vercel/turborepo/cli/cmdutil"
@@ -30,9 +29,10 @@ type LinkCommand struct {
 }
 
 type link struct {
-	ui                  cli.Ui
-	logger              hclog.Logger
-	cwd                 fs.AbsolutePath
+	// ui                  cli.Ui
+	// logger              hclog.Logger
+	// cwd                 fs.AbsolutePath
+	base                *cmdutil.CmdBase
 	modifyGitIgnore     bool
 	repoConfig          *config.RepoConfig
 	apiClient           linkAPIClient
@@ -57,31 +57,33 @@ func NewLinkCommand(helper *cmdutil.Helper) *cobra.Command {
 func getCmd(helper *cmdutil.Helper) *cobra.Command {
 	var dontModifyGitIgnore bool
 	cmd := &cobra.Command{
-		Use:           "turbo link",
+		Use:           "link",
 		Short:         "Link your local directory to a Vercel organization and enable remote caching.",
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// apiClient := config.NewClient()
+			//terminal := helper.GetUI()
+			base, err := helper.GetCmdBase(cmd.Flags())
+			if err != nil {
+				return err
+			}
 			link := &link{
-				ui:                  helper.UI,
-				logger:              helper.Logger,
-				cwd:                 helper.RepoRoot,
-				modifyGitIgnore:     !dontModifyGitIgnore,
 				repoConfig:          config.RepoConfig,
-				apiURL:              helper.UserConfig.ApiUrl,
 				apiClient:           helper.ApiClient,
+				base:            base,
+				modifyGitIgnore: !dontModifyGitIgnore,
 				promptSetup:         promptSetup,
 				promptTeam:          promptTeam,
 				promptEnableCaching: promptEnableCaching,
 				openBrowser:         browser.OpenBrowser,
 			}
-			err := link.run()
+			err = link.run()
 			if err != nil {
 				if errors.Is(err, errUserCanceled) {
-					helper.UI.Info("Canceled. Turborepo not set up.")
+					base.UI.Info("Canceled. Turborepo not set up.")
 				} else if errors.Is(err, errTryAfterEnable) || errors.Is(err, errNeedCachingEnabled) || errors.Is(err, errOverage) {
-					helper.UI.Info("Remote Caching not enabled. Please run 'turbo login' again after Remote Caching has been enabled")
+					base.UI.Info("Remote Caching not enabled. Please run 'turbo login' again after Remote Caching has been enabled")
 				} else {
 					link.logError(err)
 				}
@@ -94,28 +96,28 @@ func getCmd(helper *cmdutil.Helper) *cobra.Command {
 	return cmd
 }
 
-// Synopsis of link command
-func (c *LinkCommand) Synopsis() string {
-	cmd := getCmd(cmdutil.NewHelper(c.Config, c.Ui))
-	return cmd.Short
-}
+// // Synopsis of link command
+// func (c *LinkCommand) Synopsis() string {
+// 	cmd := getCmd(cmdutil.NewHelper(c.Config, c.Ui))
+// 	return cmd.Short
+// }
 
-// Help returns information about the `link` command
-func (c *LinkCommand) Help() string {
-	cmd := getCmd(cmdutil.NewHelper(c.Config, c.Ui))
-	return util.HelpForCobraCmd(cmd)
-}
+// // Help returns information about the `link` command
+// func (c *LinkCommand) Help() string {
+// 	cmd := getCmd(cmdutil.NewHelper(c.Config, c.Ui))
+// 	return util.HelpForCobraCmd(cmd)
+// }
 
-// Run links a local directory to a Vercel organization and enables remote caching
-func (c *LinkCommand) Run(args []string) int {
-	cmd := getCmd(cmdutil.NewHelper(c.Config, c.Ui))
-	cmd.SetArgs(args)
-	err := cmd.Execute()
-	if err != nil {
-		return 1
-	}
-	return 0
-}
+// // Run links a local directory to a Vercel organization and enables remote caching
+// func (c *LinkCommand) Run(args []string) int {
+// 	cmd := getCmd(cmdutil.NewHelper(c.Config, c.Ui))
+// 	cmd.SetArgs(args)
+// 	err := cmd.Execute()
+// 	if err != nil {
+// 		return 1
+// 	}
+// 	return 0
+// }
 
 var errUserCanceled = errors.New("canceled")
 
@@ -124,14 +126,14 @@ func (l *link) run() error {
 	if err != nil {
 		return fmt.Errorf("could not find home directory.\n%w", err)
 	}
-	l.ui.Info(">>> Remote Caching")
-	l.ui.Info("")
-	l.ui.Info("  Remote Caching shares your cached Turborepo task outputs and logs across")
-	l.ui.Info("  all your team’s Vercel projects. It also can share outputs")
-	l.ui.Info("  with other services that enable Remote Caching, like CI/CD systems.")
-	l.ui.Info("  This results in faster build times and deployments for your team.")
-	l.ui.Info(util.Sprintf("  For more info, see ${UNDERLINE}https://turborepo.org/docs/core-concepts/remote-caching${RESET}"))
-	l.ui.Info("")
+	l.base.UI.Info(">>> Remote Caching")
+	l.base.UI.Info("")
+	l.base.UI.Info("  Remote Caching shares your cached Turborepo task outputs and logs across")
+	l.base.UI.Info("  all your team’s Vercel projects. It also can share outputs")
+	l.base.UI.Info("  with other services that enable Remote Caching, like CI/CD systems.")
+	l.base.UI.Info("  This results in faster build times and deployments for your team.")
+	l.base.UI.Info(util.Sprintf("  For more info, see ${UNDERLINE}https://turborepo.org/docs/core-concepts/remote-caching${RESET}"))
+	l.base.UI.Info("")
 	currentDir, err := filepath.Abs(".")
 	if err != nil {
 		return fmt.Errorf("could figure out file path.\n%w", err)
@@ -212,9 +214,9 @@ func (l *link) run() error {
 				}
 				err = l.openBrowser(url)
 				if err != nil {
-					l.ui.Warn(fmt.Sprintf("Failed to open browser. Please visit %v to enable Remote Caching", url))
+					l.base.UI.Warn(fmt.Sprintf("Failed to open browser. Please visit %v to enable Remote Caching", url))
 				} else {
-					l.ui.Info(fmt.Sprintf("Visit %v in your browser to enable Remote Caching", url))
+					l.base.UI.Info(fmt.Sprintf("Visit %v in your browser to enable Remote Caching", url))
 				}
 				return errTryAfterEnable
 			}
@@ -227,7 +229,14 @@ func (l *link) run() error {
 	}
 
 	fs.EnsureDir(filepath.Join(".turbo", "config.json"))
+<<<<<<< HEAD
 	err = l.repoConfig.SetTeamID(teamID)
+=======
+	err = config.WriteRepoConfigFile(l.base.RepoRoot, &config.TurborepoConfig{
+		TeamId: teamID,
+		ApiUrl: l.apiURL,
+	})
+>>>>>>> d5d4b77a (WIP on root command)
 	if err != nil {
 		return fmt.Errorf("could not link current directory to team/user.\n%w", err)
 	}
@@ -240,18 +249,18 @@ func (l *link) run() error {
 		}
 	}
 
-	l.ui.Info("")
-	l.ui.Info(util.Sprintf("%s${RESET} Turborepo CLI authorized for ${BOLD}%s${RESET}", ui.Rainbow(">>> Success!"), chosenTeamName))
-	l.ui.Info("")
-	l.ui.Info(util.Sprintf("${GREY}To disable Remote Caching, run `npx turbo unlink`${RESET}"))
-	l.ui.Info("")
+	l.base.UI.Info("")
+	l.base.UI.Info(util.Sprintf("%s${RESET} Turborepo CLI authorized for ${BOLD}%s${RESET}", ui.Rainbow(">>> Success!"), chosenTeamName))
+	l.base.UI.Info("")
+	l.base.UI.Info(util.Sprintf("${GREY}To disable Remote Caching, run `npx turbo unlink`${RESET}"))
+	l.base.UI.Info("")
 	return nil
 }
 
 // logError logs an error and outputs it to the UI.
 func (l *link) logError(err error) {
-	l.logger.Error("error", err)
-	l.ui.Error(fmt.Sprintf("%s%s", ui.ERROR_PREFIX, color.RedString(" %v", err)))
+	l.base.Logger.Error("error", err)
+	l.base.UI.Error(fmt.Sprintf("%s%s", ui.ERROR_PREFIX, color.RedString(" %v", err)))
 }
 
 func promptSetup(location string) (bool, error) {

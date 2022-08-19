@@ -43,8 +43,7 @@ type Config struct {
 
 	LoginURL string
 
-	Verbosity int
-}
+	Verbosity    int
 	UserConfig   *UserConfig
 	RepoConfig   *RepoConfig
 	RemoteConfig client.RemoteConfig

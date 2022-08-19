@@ -103,7 +103,7 @@
       "program": "${workspaceRoot}/cli/cmd/turbo",
       "cwd": "${workspaceRoot}",
       "args": ["run", "build", "--force"]
-    }
+    },
     {
       "name": "Root",
       "type": "go",
@@ -111,7 +111,7 @@
       "mode": "debug",
       "program": "${workspaceRoot}/cli/cmd/turbo",
       "cwd": "${workspaceRoot}",
-      "args": []
+      "args": ["bin", "--help"]
     }
   ]
 }
