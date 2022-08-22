@@ -73,6 +73,7 @@ func getCmd(helper *cmdutil.Helper) *cobra.Command {
 				apiClient:           helper.ApiClient,
 				base:            base,
 				modifyGitIgnore: !dontModifyGitIgnore,
+				apiClient:           base.ApiClient,
 				promptSetup:         promptSetup,
 				promptTeam:          promptTeam,
 				promptEnableCaching: promptEnableCaching,

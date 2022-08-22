@@ -10,6 +10,7 @@ import (
 	"github.com/mitchellh/cli"
 	"github.com/spf13/pflag"
 	"github.com/vercel/turborepo/cli/internal/client"
+	"github.com/vercel/turborepo/cli/internal/config"
 	"github.com/vercel/turborepo/cli/internal/fs"
 	"github.com/vercel/turborepo/cli/internal/ui"
 )
@@ -24,7 +25,7 @@ type Helper struct {
 	// //UI           cli.Ui              // Should be a function
 	// //Logger       func() hclog.Logger // Should be a function
 	// //RepoRoot     fs.AbsolutePath
-	// TurboVersion string
+	TurboVersion string
 	// ApiClient    *client.ApiClient // TODO: maybe should be a function?
 
 	// for UI
@@ -36,9 +37,11 @@ type Helper struct {
 	rawRepoRoot string
 
 	clientOpts client.Opts
+
+	remoteConfig config.RemoteConfig
 }
 
-func (h *Helper) GetUI(flags *pflag.FlagSet) cli.Ui {
+func (h *Helper) getUI(flags *pflag.FlagSet) cli.Ui {
 	colorMode := ui.GetColorModeFromEnv()
 	if flags.Changed("no-color") && h.noColor {
 		colorMode = ui.ColorModeSuppressed
@@ -49,7 +52,7 @@ func (h *Helper) GetUI(flags *pflag.FlagSet) cli.Ui {
 	return ui.BuildColoredUi(colorMode)
 }
 
-func (h *Helper) GetLogger() (hclog.Logger, error) {
+func (h *Helper) getLogger() (hclog.Logger, error) {
 	var level hclog.Level
 	switch h.verbosity {
 	case 0:
@@ -86,16 +89,30 @@ func (h *Helper) GetLogger() (hclog.Logger, error) {
 	}), nil
 }
 
+// NewClient returns a new ApiClient instance using the values from
+// this Config instance.
+func (h *Helper) newClient(logger hclog.Logger) *client.ApiClient {
+	apiClient := client.NewClient(
+		h.UserConfig.ToRemoteConfig(),
+		logger,
+		h.TurboVersion,
+		h.clientOpts,
+	)
+	return apiClient
+}
+
 func (h *Helper) AddFlags(flags *pflag.FlagSet) {
 	flags.BoolVar(&h.forceColor, "color", false, "Force color usage in the terminal")
 	flags.BoolVar(&h.noColor, "no-color", false, "Suppress color usage in the terminal")
 	flags.CountVarP(&h.verbosity, "verbosity", "v", "verbosity")
 	flags.StringVar(&h.rawRepoRoot, "cwd", "", "The directory in which to run turbo")
 	client.AddFlags(&h.clientOpts, flags)
+	h.remoteConfig.AddFlags(flags)
 }
 
-func NewHelper() *Helper {
+func NewHelper(turboVersion string) *Helper {
 	return &Helper{
+		TurboVersion: turboVersion,
 		// UserConfig:   &config.UserConfig,
 		// TurboVersion: config.TurboVersion,
 		// ApiClient:    config.NewClient(),
@@ -103,8 +120,8 @@ func NewHelper() *Helper {
 }
 
 func (h *Helper) GetCmdBase(flags *pflag.FlagSet) (*CmdBase, error) {
-	ui := h.GetUI(flags)
-	logger, err := h.GetLogger()
+	ui := h.getUI(flags)
+	logger, err := h.getLogger()
 	if err != nil {
 		return nil, err
 	}
@@ -118,16 +135,18 @@ func (h *Helper) GetCmdBase(flags *pflag.FlagSet) (*CmdBase, error) {
 		return nil, err
 	}
 	return &CmdBase{
-		UI:       ui,
-		Logger:   logger,
-		RepoRoot: repoRoot,
+		UI:        ui,
+		Logger:    logger,
+		RepoRoot:  repoRoot,
+		ApiClient: h.newClient(logger),
 	}, nil
 }
 
 type CmdBase struct {
-	UI       cli.Ui
-	Logger   hclog.Logger
-	RepoRoot fs.AbsolutePath
+	UI        cli.Ui
+	Logger    hclog.Logger
+	RepoRoot  fs.AbsolutePath
+	ApiClient *client.ApiClient
 }
 
 // LogError prints an error to the UI and returns a BasicError

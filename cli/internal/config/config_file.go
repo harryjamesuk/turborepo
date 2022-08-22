@@ -61,6 +61,12 @@ func AddUserConfigFlags(userConfig *TurborepoConfig, flags *pflag.FlagSet) {
 	flags.StringVar(&userConfig.ApiUrl, "api", userConfig.ApiUrl, "Set the endpoint for API calls")
 }
 
+func (rc *RemoteConfig) AddFlags(flags *pflag.FlagSet) {
+	flags.StringVar(&rc.Token, "token", "", "Set the auth token for API calls")
+	flags.StringVar(&rc.TeamID, "team", "", "Set the team slug for API calls")
+	flags.StringVar(&rc.APIURL, "api", "", "Override the endpoint for API calls")
+}
+
 // UserConfig is a wrapper around the user-specific configuration values
 // for Turborepo.
 type UserConfig struct {

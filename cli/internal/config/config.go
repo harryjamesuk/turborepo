@@ -43,10 +43,9 @@ type Config struct {
 
 	LoginURL string
 
-	Verbosity    int
-	UserConfig   *UserConfig
-	RepoConfig   *RepoConfig
-	RemoteConfig client.RemoteConfig
+	Verbosity  int
+	UserConfig *UserConfig
+	RepoConfig *RepoConfig
 }
 
 // CacheConfig
@@ -179,7 +178,6 @@ func ParseAndValidate(args []string, ui cli.Ui, turboVersion string, userConfigF
 		Logger:       logger,
 		UserConfig:   userConfig,
 		RepoConfig:   repoConfig,
-		RemoteConfig: remoteConfig,
 		LoginURL:     loginURL,
 		TurboVersion: turboVersion,
 		Cache: &CacheConfig{
