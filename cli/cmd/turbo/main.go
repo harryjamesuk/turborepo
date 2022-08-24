@@ -87,15 +87,6 @@ func main() {
 		"unlink": func() (cli.Command, error) {
 			return &auth.UnlinkCommand{Config: cf, UI: ui}, nil
 		},
-		// "login": func() (cli.Command, error) {
-		// 	return &login.LoginCommand{Config: cf, UI: ui}, nil
-		// },
-		"logout": func() (cli.Command, error) {
-			return &auth.LogoutCommand{Config: cf, UI: ui}, nil
-		},
-		// "bin": func() (cli.Command, error) {
-		// 	return &info.BinCommand{Config: cf, UI: ui}, nil
-		// },
 		"daemon": func() (cli.Command, error) {
 			return &daemon.Command{Config: cf, UI: ui, SignalWatcher: signalWatcher}, nil
 		},
