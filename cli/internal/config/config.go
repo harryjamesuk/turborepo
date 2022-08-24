@@ -43,9 +43,10 @@ type Config struct {
 
 	LoginURL string
 
-	Verbosity  int
-	UserConfig *UserConfig
-	RepoConfig *RepoConfig
+	RemoteConfig client.RemoteConfig
+	Verbosity    int
+	UserConfig   *UserConfig
+	RepoConfig   *RepoConfig
 }
 
 // CacheConfig
@@ -78,12 +79,12 @@ func ParseAndValidate(args []string, ui cli.Ui, turboVersion string, userConfigF
 	}
 
 	// Precedence is flags > env > config > default
-	userConfig, err := ReadUserConfigFile(userConfigFile)
+	userConfig, err := LoadUserConfigFile(userConfigFile, nil)
 	if err != nil {
 		return nil, fmt.Errorf("reading user config file: %v", err)
 	}
 	token := userConfig.Token()
-	repoConfig, err := ReadRepoConfigFile(GetRepoConfigPath(cwd))
+	repoConfig, err := ReadRepoConfigFile(GetRepoConfigPath(cwd), nil)
 	if err != nil {
 		return nil, fmt.Errorf("reading repo config file: %v", err)
 	}
@@ -96,7 +97,6 @@ func ParseAndValidate(args []string, ui cli.Ui, turboVersion string, userConfigF
 			remoteConfig.Token = vercelArtifactsToken
 		}
 		if vercelArtifactsOwner != "" {
-			//repoConfig.TeamId = vercelArtifactsOwner
 			remoteConfig.TeamID = vercelArtifactsOwner
 		}
 	}
@@ -178,6 +178,7 @@ func ParseAndValidate(args []string, ui cli.Ui, turboVersion string, userConfigF
 		Logger:       logger,
 		UserConfig:   userConfig,
 		RepoConfig:   repoConfig,
+		RemoteConfig: remoteConfig,
 		LoginURL:     loginURL,
 		TurboVersion: turboVersion,
 		Cache: &CacheConfig{

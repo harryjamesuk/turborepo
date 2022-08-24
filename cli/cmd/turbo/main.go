@@ -11,7 +11,6 @@ import (
 	"github.com/vercel/turborepo/cli/internal/cmd/auth"
 	"github.com/vercel/turborepo/cli/internal/config"
 	"github.com/vercel/turborepo/cli/internal/daemon"
-	"github.com/vercel/turborepo/cli/internal/login"
 	prune "github.com/vercel/turborepo/cli/internal/prune"
 	"github.com/vercel/turborepo/cli/internal/run"
 	"github.com/vercel/turborepo/cli/internal/signals"
@@ -88,9 +87,9 @@ func main() {
 		"unlink": func() (cli.Command, error) {
 			return &auth.UnlinkCommand{Config: cf, UI: ui}, nil
 		},
-		"login": func() (cli.Command, error) {
-			return &login.LoginCommand{Config: cf, UI: ui}, nil
-		},
+		// "login": func() (cli.Command, error) {
+		// 	return &login.LoginCommand{Config: cf, UI: ui}, nil
+		// },
 		"logout": func() (cli.Command, error) {
 			return &auth.LogoutCommand{Config: cf, UI: ui}, nil
 		},

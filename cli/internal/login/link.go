@@ -10,7 +10,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/vercel/turborepo/cli/cmdutil"
 	"github.com/vercel/turborepo/cli/internal/client"
-	"github.com/vercel/turborepo/cli/internal/config"
 	"github.com/vercel/turborepo/cli/internal/fs"
 	"github.com/vercel/turborepo/cli/internal/ui"
 	"github.com/vercel/turborepo/cli/internal/util"
@@ -18,24 +17,12 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/fatih/color"
-	"github.com/mitchellh/cli"
 	"github.com/mitchellh/go-homedir"
 )
 
-// LinkCommand is a Command implementation allows the user to link your local directory to a Turbrepo
-type LinkCommand struct {
-	Config *config.Config
-	Ui     *cli.ColoredUi
-}
-
 type link struct {
-	// ui                  cli.Ui
-	// logger              hclog.Logger
-	// cwd                 fs.AbsolutePath
 	base                *cmdutil.CmdBase
 	modifyGitIgnore     bool
-	repoConfig          *config.RepoConfig
-	apiClient           linkAPIClient
 	promptSetup         func(location string) (bool, error)
 	promptTeam          func(teams []string) (string, error)
 	promptEnableCaching func() (bool, error)
@@ -69,11 +56,8 @@ func getCmd(helper *cmdutil.Helper) *cobra.Command {
 				return err
 			}
 			link := &link{
-				repoConfig:          config.RepoConfig,
-				apiClient:           helper.ApiClient,
-				base:            base,
-				modifyGitIgnore: !dontModifyGitIgnore,
-				apiClient:           base.ApiClient,
+				base:                base,
+				modifyGitIgnore:     !dontModifyGitIgnore,
 				promptSetup:         promptSetup,
 				promptTeam:          promptTeam,
 				promptEnableCaching: promptEnableCaching,
@@ -96,29 +80,6 @@ func getCmd(helper *cmdutil.Helper) *cobra.Command {
 	cmd.Flags().BoolVar(&dontModifyGitIgnore, "no-gitignore", false, "Do not create or modify .gitignore (default false)")
 	return cmd
 }
-
-// // Synopsis of link command
-// func (c *LinkCommand) Synopsis() string {
-// 	cmd := getCmd(cmdutil.NewHelper(c.Config, c.Ui))
-// 	return cmd.Short
-// }
-
-// // Help returns information about the `link` command
-// func (c *LinkCommand) Help() string {
-// 	cmd := getCmd(cmdutil.NewHelper(c.Config, c.Ui))
-// 	return util.HelpForCobraCmd(cmd)
-// }
-
-// // Run links a local directory to a Vercel organization and enables remote caching
-// func (c *LinkCommand) Run(args []string) int {
-// 	cmd := getCmd(cmdutil.NewHelper(c.Config, c.Ui))
-// 	cmd.SetArgs(args)
-// 	err := cmd.Execute()
-// 	if err != nil {
-// 		return 1
-// 	}
-// 	return 0
-// }
 
 var errUserCanceled = errors.New("canceled")
 
@@ -148,15 +109,15 @@ func (l *link) run() error {
 		return errUserCanceled
 	}
 
-	if !l.apiClient.IsLoggedIn() {
+	if !l.base.APIClient.IsLoggedIn() {
 		return fmt.Errorf(util.Sprintf("User not found. Please login to Turborepo first by running ${BOLD}`npx turbo login`${RESET}."))
 	}
 
-	teamsResponse, err := l.apiClient.GetTeams()
+	teamsResponse, err := l.base.APIClient.GetTeams()
 	if err != nil {
 		return fmt.Errorf("could not get team information.\n%w", err)
 	}
-	userResponse, err := l.apiClient.GetUser()
+	userResponse, err := l.base.APIClient.GetUser()
 	if err != nil {
 		return fmt.Errorf("could not get user information.\n%w", err)
 	}
@@ -193,9 +154,9 @@ func (l *link) run() error {
 		}
 		teamID = chosenTeam.ID
 	}
-	l.apiClient.SetTeamID(teamID)
+	l.base.APIClient.SetTeamID(teamID)
 
-	cachingStatus, err := l.apiClient.GetCachingStatus()
+	cachingStatus, err := l.base.APIClient.GetCachingStatus()
 	if err != nil {
 		return err
 	}
@@ -230,14 +191,7 @@ func (l *link) run() error {
 	}
 
 	fs.EnsureDir(filepath.Join(".turbo", "config.json"))
-<<<<<<< HEAD
-	err = l.repoConfig.SetTeamID(teamID)
-=======
-	err = config.WriteRepoConfigFile(l.base.RepoRoot, &config.TurborepoConfig{
-		TeamId: teamID,
-		ApiUrl: l.apiURL,
-	})
->>>>>>> d5d4b77a (WIP on root command)
+	err = l.base.RepoConfig.SetTeamID(teamID)
 	if err != nil {
 		return fmt.Errorf("could not link current directory to team/user.\n%w", err)
 	}

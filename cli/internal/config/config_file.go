@@ -57,15 +57,9 @@ func (rc *RepoConfig) Delete() error {
 	return rc.path.Remove()
 }
 
-func AddUserConfigFlags(userConfig *TurborepoConfig, flags *pflag.FlagSet) {
-	flags.StringVar(&userConfig.ApiUrl, "api", userConfig.ApiUrl, "Set the endpoint for API calls")
-}
-
-func (rc *RemoteConfig) AddFlags(flags *pflag.FlagSet) {
-	flags.StringVar(&rc.Token, "token", "", "Set the auth token for API calls")
-	flags.StringVar(&rc.TeamID, "team", "", "Set the team slug for API calls")
-	flags.StringVar(&rc.APIURL, "api", "", "Override the endpoint for API calls")
-}
+// func AddUserConfigFlags(userConfig *TurborepoConfig, flags *pflag.FlagSet) {
+// 	flags.StringVar(&userConfig.ApiUrl, "api", userConfig.ApiUrl, "Set the endpoint for API calls")
+// }
 
 // UserConfig is a wrapper around the user-specific configuration values
 // for Turborepo.
@@ -103,15 +97,16 @@ func (uc *UserConfig) Delete() error {
 	return uc.path.Remove()
 }
 
-// ReadUserConfigFile creates a UserConfig using the
+// LoadUserConfigFile creates a UserConfig using the
 // specified path as the user config file. Note that the path or its parents
 // do not need to exist. On a write to this configuration, they will be created.
-func ReadUserConfigFile(path fs.AbsolutePath) (*UserConfig, error) {
+func LoadUserConfigFile(path fs.AbsolutePath, flags *pflag.FlagSet) (*UserConfig, error) {
 	userViper := viper.New()
 	userViper.SetConfigFile(path.ToString())
 	userViper.SetConfigType("json")
 	userViper.SetEnvPrefix("turbo")
 	userViper.MustBindEnv("token")
+	userViper.BindPFlag("token", flags.Lookup("token"))
 	if err := userViper.ReadInConfig(); err != nil && !os.IsNotExist(err) {
 		return nil, err
 	}
@@ -119,6 +114,10 @@ func ReadUserConfigFile(path fs.AbsolutePath) (*UserConfig, error) {
 		userViper: userViper,
 		path:      path,
 	}, nil
+}
+
+func AddUserConfigFlags(flags *pflag.FlagSet) {
+	flags.String("token", "", "Set the auth token for API calls")
 }
 
 // DefaultUserConfigPath returns the default platform-dependent place that
@@ -136,7 +135,7 @@ const (
 // specified path as the repo config file. Note that the path or its
 // parents do not need to exist. On a write to this configuration, they
 // will be created.
-func ReadRepoConfigFile(path fs.AbsolutePath) (*RepoConfig, error) {
+func ReadRepoConfigFile(path fs.AbsolutePath, flags *pflag.FlagSet) (*RepoConfig, error) {
 	repoViper := viper.New()
 	repoViper.SetConfigFile(path.ToString())
 	repoViper.SetConfigType("json")
@@ -147,6 +146,7 @@ func ReadRepoConfigFile(path fs.AbsolutePath) (*RepoConfig, error) {
 	repoViper.MustBindEnv("teamid")
 	repoViper.SetDefault("apiurl", _defaultAPIURL)
 	repoViper.SetDefault("loginurl", _defaultLoginURL)
+	repoViper.BindPFlag("loginurl", flags.Lookup("login"))
 	if err := repoViper.ReadInConfig(); err != nil && !os.IsNotExist(err) {
 		return nil, err
 	}
@@ -154,6 +154,12 @@ func ReadRepoConfigFile(path fs.AbsolutePath) (*RepoConfig, error) {
 		repoViper: repoViper,
 		path:      path,
 	}, nil
+}
+
+func AddRepoConfigFlags(flags *pflag.FlagSet) {
+	flags.String("team", "", "Set the team slug for API calls")
+	flags.String("api", "", "Override the endpoint for API calls")
+	flags.String("login", "", "Override the login endpoint")
 }
 
 // GetRepoConfigPath reads the user-specific configuration values

@@ -20,12 +20,11 @@ const (
 	_envLogLevel = "TURBO_LOG_LEVEL"
 )
 
+// Helper is a struct used to hold configuration values passed via flag, env vars,
+// config files, etc. It is not intended for direct use by turbo commands, it drives
+// the creation of CmdBase, which is then used by the commands themselves.
 type Helper struct {
-	// UserConfig *config.TurborepoConfig
-	// //UI           cli.Ui              // Should be a function
-	// //Logger       func() hclog.Logger // Should be a function
-	// //RepoRoot     fs.AbsolutePath
-	TurboVersion string
+	turboVersion string
 	// ApiClient    *client.ApiClient // TODO: maybe should be a function?
 
 	// for UI
@@ -38,7 +37,10 @@ type Helper struct {
 
 	clientOpts client.Opts
 
-	remoteConfig config.RemoteConfig
+	// UserConfigPath is the path to where we expect to find
+	// a user-specific config file, if one is present. Public
+	// to allow overrides in tests
+	UserConfigPath fs.AbsolutePath
 }
 
 func (h *Helper) getUI(flags *pflag.FlagSet) cli.Ui {
@@ -89,33 +91,20 @@ func (h *Helper) getLogger() (hclog.Logger, error) {
 	}), nil
 }
 
-// NewClient returns a new ApiClient instance using the values from
-// this Config instance.
-func (h *Helper) newClient(logger hclog.Logger) *client.ApiClient {
-	apiClient := client.NewClient(
-		h.UserConfig.ToRemoteConfig(),
-		logger,
-		h.TurboVersion,
-		h.clientOpts,
-	)
-	return apiClient
-}
-
 func (h *Helper) AddFlags(flags *pflag.FlagSet) {
 	flags.BoolVar(&h.forceColor, "color", false, "Force color usage in the terminal")
 	flags.BoolVar(&h.noColor, "no-color", false, "Suppress color usage in the terminal")
 	flags.CountVarP(&h.verbosity, "verbosity", "v", "verbosity")
 	flags.StringVar(&h.rawRepoRoot, "cwd", "", "The directory in which to run turbo")
 	client.AddFlags(&h.clientOpts, flags)
-	h.remoteConfig.AddFlags(flags)
+	config.AddRepoConfigFlags(flags)
+	config.AddUserConfigFlags(flags)
 }
 
 func NewHelper(turboVersion string) *Helper {
 	return &Helper{
-		TurboVersion: turboVersion,
-		// UserConfig:   &config.UserConfig,
-		// TurboVersion: config.TurboVersion,
-		// ApiClient:    config.NewClient(),
+		turboVersion:   turboVersion,
+		UserConfigPath: config.DefaultUserConfigPath(),
 	}
 }
 
@@ -134,19 +123,53 @@ func (h *Helper) GetCmdBase(flags *pflag.FlagSet) (*CmdBase, error) {
 	if err != nil {
 		return nil, err
 	}
+	repoConfig, err := config.ReadRepoConfigFile(config.GetRepoConfigPath(repoRoot), flags)
+	if err != nil {
+		return nil, err
+	}
+	userConfig, err := config.LoadUserConfigFile(h.UserConfigPath, flags)
+	if err != nil {
+		return nil, err
+	}
+	remoteConfig := repoConfig.GetRemoteConfig(userConfig.Token())
+	if remoteConfig.Token == "" && config.IsCI() {
+		vercelArtifactsToken := os.Getenv("VERCEL_ARTIFACTS_TOKEN")
+		vercelArtifactsOwner := os.Getenv("VERCEL_ARTIFACTS_OWNER")
+		if vercelArtifactsToken != "" {
+			remoteConfig.Token = vercelArtifactsToken
+		}
+		if vercelArtifactsOwner != "" {
+			remoteConfig.TeamID = vercelArtifactsOwner
+		}
+	}
+	apiClient := client.NewClient(
+		remoteConfig,
+		logger,
+		h.turboVersion,
+		h.clientOpts,
+	)
 	return &CmdBase{
-		UI:        ui,
-		Logger:    logger,
-		RepoRoot:  repoRoot,
-		ApiClient: h.newClient(logger),
+		UI:           ui,
+		Logger:       logger,
+		RepoRoot:     repoRoot,
+		APIClient:    apiClient,
+		RepoConfig:   repoConfig,
+		UserConfig:   userConfig,
+		RemoteConfig: remoteConfig,
+		TurboVersion: h.turboVersion,
 	}, nil
 }
 
+// CmdBase encompasses everything common to all turbo commands.
 type CmdBase struct {
-	UI        cli.Ui
-	Logger    hclog.Logger
-	RepoRoot  fs.AbsolutePath
-	ApiClient *client.ApiClient
+	UI           cli.Ui
+	Logger       hclog.Logger
+	RepoRoot     fs.AbsolutePath
+	APIClient    *client.ApiClient
+	RepoConfig   *config.RepoConfig
+	UserConfig   *config.UserConfig
+	RemoteConfig client.RemoteConfig
+	TurboVersion string
 }
 
 // LogError prints an error to the UI and returns a BasicError
