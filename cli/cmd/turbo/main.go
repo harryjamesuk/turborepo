@@ -10,7 +10,6 @@ import (
 	"github.com/vercel/turborepo/cli/internal/cmd"
 	"github.com/vercel/turborepo/cli/internal/config"
 	prune "github.com/vercel/turborepo/cli/internal/prune"
-	"github.com/vercel/turborepo/cli/internal/run"
 	"github.com/vercel/turborepo/cli/internal/signals"
 	"github.com/vercel/turborepo/cli/internal/ui"
 	uiPkg "github.com/vercel/turborepo/cli/internal/ui"
@@ -72,16 +71,13 @@ func main() {
 
 	c.HiddenCommands = []string{"graph"}
 	c.Commands = map[string]cli.CommandFactory{
-		"run": func() (cli.Command, error) {
-			return &run.RunCommand{Config: cf, UI: ui, SignalWatcher: signalWatcher},
-				nil
-		},
+		// "run": func() (cli.Command, error) {
+		// 	return &run.RunCommand{Config: cf, UI: ui, SignalWatcher: signalWatcher},
+		// 		nil
+		// },
 		"prune": func() (cli.Command, error) {
 			return &prune.PruneCommand{Config: cf, Ui: ui}, nil
 		},
-		// "daemon": func() (cli.Command, error) {
-		// 	return &daemon.Command{Config: cf, UI: ui, SignalWatcher: signalWatcher}, nil
-		// },
 	}
 
 	// Capture the defer statements below so the "done" message comes last
