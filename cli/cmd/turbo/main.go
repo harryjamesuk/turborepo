@@ -8,9 +8,7 @@ import (
 	"time"
 
 	"github.com/vercel/turborepo/cli/internal/cmd"
-	"github.com/vercel/turborepo/cli/internal/cmd/auth"
 	"github.com/vercel/turborepo/cli/internal/config"
-	"github.com/vercel/turborepo/cli/internal/daemon"
 	prune "github.com/vercel/turborepo/cli/internal/prune"
 	"github.com/vercel/turborepo/cli/internal/run"
 	"github.com/vercel/turborepo/cli/internal/signals"
@@ -23,7 +21,8 @@ import (
 )
 
 func main() {
-	root := cmd.GetCmd(turboVersion)
+	signalWatcher := signals.NewWatcher()
+	root := cmd.GetCmd(turboVersion, signalWatcher)
 	err := root.Execute()
 	if err != nil {
 		panic(err)
@@ -71,7 +70,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	signalWatcher := signals.NewWatcher()
 	c.HiddenCommands = []string{"graph"}
 	c.Commands = map[string]cli.CommandFactory{
 		"run": func() (cli.Command, error) {
@@ -81,15 +79,9 @@ func main() {
 		"prune": func() (cli.Command, error) {
 			return &prune.PruneCommand{Config: cf, Ui: ui}, nil
 		},
-		// "link": func() (cli.Command, error) {
-		// 	return &login.LinkCommand{Config: cf, Ui: ui}, nil
+		// "daemon": func() (cli.Command, error) {
+		// 	return &daemon.Command{Config: cf, UI: ui, SignalWatcher: signalWatcher}, nil
 		// },
-		"unlink": func() (cli.Command, error) {
-			return &auth.UnlinkCommand{Config: cf, UI: ui}, nil
-		},
-		"daemon": func() (cli.Command, error) {
-			return &daemon.Command{Config: cf, UI: ui, SignalWatcher: signalWatcher}, nil
-		},
 	}
 
 	// Capture the defer statements below so the "done" message comes last
