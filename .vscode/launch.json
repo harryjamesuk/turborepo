@@ -110,8 +110,8 @@
       "request": "launch",
       "mode": "debug",
       "program": "${workspaceRoot}/cli/cmd/turbo",
-      "cwd": "${workspaceRoot}",
-      "args": ["bin", "--help"]
+      "cwd": "${workspaceRoot}/cli",
+      "args": ["run", "build", "--dry", "--cwd=../"]
     }
   ]
 }
