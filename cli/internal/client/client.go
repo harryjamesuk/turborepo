@@ -100,6 +100,11 @@ func (c *ApiClient) SetTeamID(teamID string) {
 	c.teamID = teamID
 }
 
+// GetTeamID returns the currently configured team id
+func (c *ApiClient) GetTeamID() string {
+	return c.teamID
+}
+
 func (c *ApiClient) retryCachePolicy(resp *http.Response, err error) (bool, error) {
 	if err != nil {
 		if errors.As(err, &x509.UnknownAuthorityError{}) {

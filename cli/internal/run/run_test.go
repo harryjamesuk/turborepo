@@ -40,8 +40,8 @@ func TestParseConfig(t *testing.T) {
 					concurrency: 10,
 				},
 				cacheOpts: cache.Opts{
-					Dir:     defaultCacheFolder,
-					Workers: 10,
+					OverrideDir: defaultCacheFolder,
+					Workers:     10,
 				},
 				runcacheOpts: runcache.Opts{},
 				scopeOpts:    scope.Opts{},
@@ -56,8 +56,8 @@ func TestParseConfig(t *testing.T) {
 					concurrency: 10,
 				},
 				cacheOpts: cache.Opts{
-					Dir:     defaultCacheFolder,
-					Workers: 10,
+					OverrideDir: defaultCacheFolder,
+					Workers:     10,
 				},
 				runcacheOpts: runcache.Opts{},
 				scopeOpts: scope.Opts{
@@ -76,8 +76,8 @@ func TestParseConfig(t *testing.T) {
 					concurrency: 12,
 				},
 				cacheOpts: cache.Opts{
-					Dir:     defaultCacheFolder,
-					Workers: 10,
+					OverrideDir: defaultCacheFolder,
+					Workers:     10,
 				},
 				runcacheOpts: runcache.Opts{},
 				scopeOpts:    scope.Opts{},
@@ -92,8 +92,8 @@ func TestParseConfig(t *testing.T) {
 					concurrency: cpus,
 				},
 				cacheOpts: cache.Opts{
-					Dir:     defaultCacheFolder,
-					Workers: 10,
+					OverrideDir: defaultCacheFolder,
+					Workers:     10,
 				},
 				runcacheOpts: runcache.Opts{},
 				scopeOpts:    scope.Opts{},
@@ -110,8 +110,8 @@ func TestParseConfig(t *testing.T) {
 					graphDot:    false,
 				},
 				cacheOpts: cache.Opts{
-					Dir:     defaultCacheFolder,
-					Workers: 10,
+					OverrideDir: defaultCacheFolder,
+					Workers:     10,
 				},
 				runcacheOpts: runcache.Opts{},
 				scopeOpts:    scope.Opts{},
@@ -128,8 +128,8 @@ func TestParseConfig(t *testing.T) {
 					graphDot:    true,
 				},
 				cacheOpts: cache.Opts{
-					Dir:     defaultCacheFolder,
-					Workers: 10,
+					OverrideDir: defaultCacheFolder,
+					Workers:     10,
 				},
 				runcacheOpts: runcache.Opts{},
 				scopeOpts:    scope.Opts{},
@@ -147,8 +147,8 @@ func TestParseConfig(t *testing.T) {
 					passThroughArgs: []string{"--boop", "zoop"},
 				},
 				cacheOpts: cache.Opts{
-					Dir:     defaultCacheFolder,
-					Workers: 10,
+					OverrideDir: defaultCacheFolder,
+					Workers:     10,
 				},
 				runcacheOpts: runcache.Opts{},
 				scopeOpts:    scope.Opts{},
@@ -163,8 +163,8 @@ func TestParseConfig(t *testing.T) {
 					concurrency: 10,
 				},
 				cacheOpts: cache.Opts{
-					Dir:     defaultCacheFolder,
-					Workers: 10,
+					OverrideDir: defaultCacheFolder,
+					Workers:     10,
 				},
 				runcacheOpts: runcache.Opts{
 					SkipReads: true,
@@ -181,7 +181,7 @@ func TestParseConfig(t *testing.T) {
 					concurrency: 10,
 				},
 				cacheOpts: cache.Opts{
-					Dir:            defaultCacheFolder,
+					OverrideDir:    defaultCacheFolder,
 					Workers:        10,
 					SkipFilesystem: true,
 				},
@@ -198,8 +198,8 @@ func TestParseConfig(t *testing.T) {
 					concurrency: 10,
 				},
 				cacheOpts: cache.Opts{
-					Dir:     defaultCacheFolder,
-					Workers: 10,
+					OverrideDir: defaultCacheFolder,
+					Workers:     10,
 				},
 				runcacheOpts: runcache.Opts{
 					SkipWrites: true,
@@ -219,8 +219,8 @@ func TestParseConfig(t *testing.T) {
 					passThroughArgs: []string{},
 				},
 				cacheOpts: cache.Opts{
-					Dir:     defaultCacheFolder,
-					Workers: 10,
+					OverrideDir: defaultCacheFolder,
+					Workers:     10,
 				},
 				runcacheOpts: runcache.Opts{},
 				scopeOpts:    scope.Opts{},
@@ -235,8 +235,8 @@ func TestParseConfig(t *testing.T) {
 					concurrency: 10,
 				},
 				cacheOpts: cache.Opts{
-					Dir:     defaultCacheFolder,
-					Workers: 10,
+					OverrideDir: defaultCacheFolder,
+					Workers:     10,
 				},
 				runcacheOpts: runcache.Opts{},
 				scopeOpts: scope.Opts{
@@ -254,8 +254,8 @@ func TestParseConfig(t *testing.T) {
 					concurrency:     10,
 				},
 				cacheOpts: cache.Opts{
-					Dir:     defaultCacheFolder,
-					Workers: 10,
+					OverrideDir: defaultCacheFolder,
+					Workers:     10,
 				},
 				runcacheOpts: runcache.Opts{},
 				scopeOpts:    scope.Opts{},
@@ -271,8 +271,8 @@ func TestParseConfig(t *testing.T) {
 					concurrency:     10,
 				},
 				cacheOpts: cache.Opts{
-					Dir:     defaultCwd.Join("bar"),
-					Workers: 10,
+					OverrideDir: defaultCwd.Join("bar"),
+					Workers:     10,
 				},
 				runcacheOpts: runcache.Opts{},
 				scopeOpts:    scope.Opts{},
@@ -288,8 +288,8 @@ func TestParseConfig(t *testing.T) {
 					concurrency:     10,
 				},
 				cacheOpts: cache.Opts{
-					Dir:     defaultCwd.Join("bar"),
-					Workers: 10,
+					OverrideDir: defaultCwd.Join("bar"),
+					Workers:     10,
 				},
 				runcacheOpts: runcache.Opts{},
 				scopeOpts:    scope.Opts{},
@@ -332,8 +332,8 @@ func TestParseRunOptionsUsesCWDFlag(t *testing.T) {
 			concurrency: 10,
 		},
 		cacheOpts: cache.Opts{
-			Dir:     cwd.Join("node_modules", ".cache", "turbo"),
-			Workers: 10,
+			OverrideDir: cwd.Join("node_modules", ".cache", "turbo"),
+			Workers:     10,
 		},
 		runcacheOpts: runcache.Opts{},
 		scopeOpts:    scope.Opts{},

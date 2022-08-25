@@ -7,14 +7,15 @@ import (
 	"github.com/vercel/turborepo/cli/internal/cmd/info"
 	"github.com/vercel/turborepo/cli/internal/daemon"
 	"github.com/vercel/turborepo/cli/internal/login"
+	"github.com/vercel/turborepo/cli/internal/run"
 	"github.com/vercel/turborepo/cli/internal/signals"
 )
 
 func GetCmd(turboVersion string, signalWatcher *signals.Watcher) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:              "turbo",
-		Short:            "Turbo charge your monorepo",
-		TraverseChildren: true,
+		Use:   "turbo",
+		Short: "Turbo charge your monorepo",
+		//TraverseChildren: true,
 	}
 	flags := cmd.PersistentFlags()
 	helper := cmdutil.NewHelper(turboVersion)
@@ -25,5 +26,6 @@ func GetCmd(turboVersion string, signalWatcher *signals.Watcher) *cobra.Command 
 	cmd.AddCommand(auth.UnlinkCmd(helper))
 	cmd.AddCommand(info.BinCmd(helper))
 	cmd.AddCommand(daemon.GetCmd(helper, signalWatcher))
+	cmd.AddCommand(run.GetCmd(helper, signalWatcher))
 	return cmd
 }

@@ -208,7 +208,7 @@ func TestNew(t *testing.T) {
 			name: "With just fsCache configured, new returns only an fsCache",
 			args: args{
 				opts: Opts{
-					Dir:            fs.AbsolutePath(cwd),
+					OverrideDir:    fs.AbsolutePath(cwd),
 					SkipFilesystem: false,
 					SkipRemote:     true,
 				},
@@ -223,7 +223,7 @@ func TestNew(t *testing.T) {
 			name: "With both configured, new returns an fsCache and httpCache",
 			args: args{
 				opts: Opts{
-					Dir:            fs.AbsolutePath(cwd),
+					OverrideDir:    fs.AbsolutePath(cwd),
 					SkipFilesystem: false,
 					SkipRemote:     false,
 					RemoteCacheOpts: fs.RemoteCacheOptions{

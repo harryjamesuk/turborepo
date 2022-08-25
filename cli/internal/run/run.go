@@ -22,7 +22,6 @@ import (
 	"github.com/vercel/turborepo/cli/internal/analytics"
 	"github.com/vercel/turborepo/cli/internal/cache"
 	"github.com/vercel/turborepo/cli/internal/colorcache"
-	"github.com/vercel/turborepo/cli/internal/config"
 	"github.com/vercel/turborepo/cli/internal/context"
 	"github.com/vercel/turborepo/cli/internal/core"
 	"github.com/vercel/turborepo/cli/internal/daemon"
@@ -100,7 +99,7 @@ func GetCmd(helper *cmdutil.Helper, signalWatcher *signals.Watcher) *cobra.Comma
 	var opts *Opts
 	var flags *pflag.FlagSet
 	cmd := &cobra.Command{
-		Use:                   "turbo run <task> [...<task>] [<flags>] -- <args passed to tasks>",
+		Use:                   "run <task> [...<task>] [<flags>] -- <args passed to tasks>",
 		Short:                 "Run tasks across projects in your monorepo",
 		Long:                  _cmdLong,
 		SilenceUsage:          true,
@@ -122,7 +121,7 @@ func GetCmd(helper *cmdutil.Helper, signalWatcher *signals.Watcher) *cobra.Comma
 		},
 	}
 	flags = cmd.Flags()
-	opts = optsFromFlags(flags, helper)
+	opts = optsFromFlags(flags)
 	return cmd
 }
 
@@ -133,15 +132,13 @@ func parseTasksAndPassthroughArgs(remainingArgs []string, flags *pflag.FlagSet) 
 	return remainingArgs, nil
 }
 
-func optsFromFlags(flags *pflag.FlagSet, helper *cmdutil.Helper) *Opts {
-	opts := getDefaultOptions(config)
+func optsFromFlags(flags *pflag.FlagSet) *Opts {
+	opts := getDefaultOptions()
 	aliases := make(map[string]string)
 	scope.AddFlags(&opts.scopeOpts, flags)
 	addRunOpts(&opts.runOpts, flags, aliases)
 	noopPersistentOptsDuringMigration(flags)
-	// TODO: this will probably have to change when we are all-cobra and might not
-	// have Cwd yet.
-	cache.AddFlags(&opts.cacheOpts, flags, config.Cwd)
+	cache.AddFlags(&opts.cacheOpts, flags)
 	runcache.AddFlags(&opts.runcacheOpts, flags)
 	flags.SetNormalizeFunc(func(f *pflag.FlagSet, name string) pflag.NormalizedName {
 		if alias, ok := aliases[name]; ok {
@@ -217,7 +214,7 @@ func (r *run) run(ctx gocontext.Context, targets []string) error {
 	}
 	// TODO: these values come from a config file, hopefully viper can help us merge these
 	r.opts.cacheOpts.RemoteCacheOpts = turboJSON.RemoteCacheOptions
-	pkgDepGraph, err := context.New(context.WithGraph(r.base.RepoRoot, rootPackageJSON, r.opts.cacheOpts.Dir))
+	pkgDepGraph, err := context.New(context.WithGraph(r.base.RepoRoot, rootPackageJSON, r.opts.cacheOpts.ResolveCacheDir(r.base.RepoRoot)))
 	if err != nil {
 		return err
 	}
@@ -280,7 +277,7 @@ func (r *run) run(ctx gocontext.Context, targets []string) error {
 		return fmt.Errorf("failed to calculate global hash: %v", err)
 	}
 	r.base.Logger.Debug("global hash", "value", globalHash)
-	r.base.Logger.Debug("local cache folder", "path", r.opts.cacheOpts.Dir)
+	r.base.Logger.Debug("local cache folder", "path", r.opts.cacheOpts.OverrideDir)
 
 	// TODO: consolidate some of these arguments
 	g := &completeGraph{
@@ -533,16 +530,16 @@ func addRunOpts(opts *runOpts, flags *pflag.FlagSet, aliases map[string]string) 
 }
 
 var _persistentFlags = []string{
-	"team",
-	"token",
-	"preflight",
-	"api",
-	"url",
+	// "team",
+	// "token",
+	// "preflight",
+	// "api",
+	// "url",
 	"trace",
 	"cpuprofile",
 	"heap",
 	"no-gc",
-	"cwd",
+	// "cwd",
 }
 
 func noopPersistentOptsDuringMigration(flags *pflag.FlagSet) {
@@ -651,16 +648,13 @@ func (d *dryRunValue) Type() string {
 	return "/ dry "
 }
 
-func getDefaultOptions(config *config.Config) *Opts {
+func getDefaultOptions() *Opts {
 	return &Opts{
 		runOpts: runOpts{
 			concurrency: 10,
 		},
-		cacheOpts: cache.Opts{
-			Dir:     cache.DefaultLocation(config.Cwd),
-			Workers: config.Cache.Workers,
-		},
-		scopeOpts: scope.Opts{},
+		//cacheOpts: cache.Opts{},
+		//scopeOpts: scope.Opts{},
 	}
 }
 
@@ -687,7 +681,7 @@ func (r *run) logWarning(prefix string, err error) {
 }
 
 func (r *run) executeTasks(ctx gocontext.Context, g *completeGraph, rs *runSpec, engine *core.Scheduler, packageManager *packagemanager.PackageManager, hashes *taskhash.Tracker, startAt time.Time) error {
-	apiClient := r.config.NewClient()
+	apiClient := r.base.APIClient
 	var analyticsSink analytics.Sink
 	if apiClient.IsLoggedIn() {
 		analyticsSink = apiClient
@@ -695,11 +689,11 @@ func (r *run) executeTasks(ctx gocontext.Context, g *completeGraph, rs *runSpec,
 		r.opts.cacheOpts.SkipRemote = true
 		analyticsSink = analytics.NullSink
 	}
-	analyticsClient := analytics.NewClient(ctx, analyticsSink, r.config.Logger.Named("analytics"))
+	analyticsClient := analytics.NewClient(ctx, analyticsSink, r.base.Logger.Named("analytics"))
 	defer analyticsClient.CloseWithTimeout(50 * time.Millisecond)
 	// Theoretically this is overkill, but bias towards not spamming the console
 	once := &sync.Once{}
-	turboCache, err := cache.New(rs.Opts.cacheOpts, r.config, apiClient, analyticsClient, func(_cache cache.Cache, err error) {
+	turboCache, err := cache.New(rs.Opts.cacheOpts, r.base.RepoRoot, apiClient, analyticsClient, func(_cache cache.Cache, err error) {
 		// Currently the HTTP Cache is the only one that can be disabled.
 		// With a cache system refactor, we might consider giving names to the caches so
 		// we can accurately report them here.

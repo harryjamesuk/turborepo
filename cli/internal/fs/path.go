@@ -244,6 +244,7 @@ func GetUserConfigDir() AbsolutePath {
 	return configHome.Join("turborepo")
 }
 
+// TODO(gsoltis): delete this, not needed
 type pathValue struct {
 	base     AbsolutePath
 	current  *AbsolutePath
