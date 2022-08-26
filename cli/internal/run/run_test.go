@@ -2,18 +2,15 @@ package run
 
 import (
 	"fmt"
-	"path/filepath"
 	"runtime"
 	"testing"
 
 	"github.com/pyr-sh/dag"
 	"github.com/spf13/pflag"
 	"github.com/vercel/turborepo/cli/internal/cache"
-	"github.com/vercel/turborepo/cli/internal/config"
 	"github.com/vercel/turborepo/cli/internal/fs"
 	"github.com/vercel/turborepo/cli/internal/runcache"
 	"github.com/vercel/turborepo/cli/internal/scope"
-	"github.com/vercel/turborepo/cli/internal/ui"
 	"github.com/vercel/turborepo/cli/internal/util"
 
 	"github.com/stretchr/testify/assert"
@@ -25,7 +22,6 @@ func TestParseConfig(t *testing.T) {
 	if err != nil {
 		t.Errorf("failed to get cwd: %v", err)
 	}
-	defaultCacheFolder := defaultCwd.Join(filepath.FromSlash("node_modules/.cache/turbo"))
 	cases := []struct {
 		Name          string
 		Args          []string
@@ -40,8 +36,7 @@ func TestParseConfig(t *testing.T) {
 					concurrency: 10,
 				},
 				cacheOpts: cache.Opts{
-					OverrideDir: defaultCacheFolder,
-					Workers:     10,
+					Workers: 10,
 				},
 				runcacheOpts: runcache.Opts{},
 				scopeOpts:    scope.Opts{},
@@ -56,8 +51,7 @@ func TestParseConfig(t *testing.T) {
 					concurrency: 10,
 				},
 				cacheOpts: cache.Opts{
-					OverrideDir: defaultCacheFolder,
-					Workers:     10,
+					Workers: 10,
 				},
 				runcacheOpts: runcache.Opts{},
 				scopeOpts: scope.Opts{
@@ -76,8 +70,7 @@ func TestParseConfig(t *testing.T) {
 					concurrency: 12,
 				},
 				cacheOpts: cache.Opts{
-					OverrideDir: defaultCacheFolder,
-					Workers:     10,
+					Workers: 10,
 				},
 				runcacheOpts: runcache.Opts{},
 				scopeOpts:    scope.Opts{},
@@ -92,8 +85,7 @@ func TestParseConfig(t *testing.T) {
 					concurrency: cpus,
 				},
 				cacheOpts: cache.Opts{
-					OverrideDir: defaultCacheFolder,
-					Workers:     10,
+					Workers: 10,
 				},
 				runcacheOpts: runcache.Opts{},
 				scopeOpts:    scope.Opts{},
@@ -110,8 +102,7 @@ func TestParseConfig(t *testing.T) {
 					graphDot:    false,
 				},
 				cacheOpts: cache.Opts{
-					OverrideDir: defaultCacheFolder,
-					Workers:     10,
+					Workers: 10,
 				},
 				runcacheOpts: runcache.Opts{},
 				scopeOpts:    scope.Opts{},
@@ -128,8 +119,7 @@ func TestParseConfig(t *testing.T) {
 					graphDot:    true,
 				},
 				cacheOpts: cache.Opts{
-					OverrideDir: defaultCacheFolder,
-					Workers:     10,
+					Workers: 10,
 				},
 				runcacheOpts: runcache.Opts{},
 				scopeOpts:    scope.Opts{},
@@ -147,8 +137,7 @@ func TestParseConfig(t *testing.T) {
 					passThroughArgs: []string{"--boop", "zoop"},
 				},
 				cacheOpts: cache.Opts{
-					OverrideDir: defaultCacheFolder,
-					Workers:     10,
+					Workers: 10,
 				},
 				runcacheOpts: runcache.Opts{},
 				scopeOpts:    scope.Opts{},
@@ -163,8 +152,7 @@ func TestParseConfig(t *testing.T) {
 					concurrency: 10,
 				},
 				cacheOpts: cache.Opts{
-					OverrideDir: defaultCacheFolder,
-					Workers:     10,
+					Workers: 10,
 				},
 				runcacheOpts: runcache.Opts{
 					SkipReads: true,
@@ -181,7 +169,6 @@ func TestParseConfig(t *testing.T) {
 					concurrency: 10,
 				},
 				cacheOpts: cache.Opts{
-					OverrideDir:    defaultCacheFolder,
 					Workers:        10,
 					SkipFilesystem: true,
 				},
@@ -198,8 +185,7 @@ func TestParseConfig(t *testing.T) {
 					concurrency: 10,
 				},
 				cacheOpts: cache.Opts{
-					OverrideDir: defaultCacheFolder,
-					Workers:     10,
+					Workers: 10,
 				},
 				runcacheOpts: runcache.Opts{
 					SkipWrites: true,
@@ -219,8 +205,7 @@ func TestParseConfig(t *testing.T) {
 					passThroughArgs: []string{},
 				},
 				cacheOpts: cache.Opts{
-					OverrideDir: defaultCacheFolder,
-					Workers:     10,
+					Workers: 10,
 				},
 				runcacheOpts: runcache.Opts{},
 				scopeOpts:    scope.Opts{},
@@ -235,8 +220,7 @@ func TestParseConfig(t *testing.T) {
 					concurrency: 10,
 				},
 				cacheOpts: cache.Opts{
-					OverrideDir: defaultCacheFolder,
-					Workers:     10,
+					Workers: 10,
 				},
 				runcacheOpts: runcache.Opts{},
 				scopeOpts: scope.Opts{
@@ -254,8 +238,7 @@ func TestParseConfig(t *testing.T) {
 					concurrency:     10,
 				},
 				cacheOpts: cache.Opts{
-					OverrideDir: defaultCacheFolder,
-					Workers:     10,
+					Workers: 10,
 				},
 				runcacheOpts: runcache.Opts{},
 				scopeOpts:    scope.Opts{},
@@ -271,7 +254,7 @@ func TestParseConfig(t *testing.T) {
 					concurrency:     10,
 				},
 				cacheOpts: cache.Opts{
-					OverrideDir: defaultCwd.Join("bar"),
+					OverrideDir: "bar",
 					Workers:     10,
 				},
 				runcacheOpts: runcache.Opts{},
@@ -288,7 +271,7 @@ func TestParseConfig(t *testing.T) {
 					concurrency:     10,
 				},
 				cacheOpts: cache.Opts{
-					OverrideDir: defaultCwd.Join("bar"),
+					OverrideDir: defaultCwd.Join("bar").ToString(),
 					Workers:     10,
 				},
 				runcacheOpts: runcache.Opts{},
@@ -298,16 +281,10 @@ func TestParseConfig(t *testing.T) {
 		},
 	}
 
-	cf := &config.Config{
-		Cwd: defaultCwd,
-		Cache: &config.CacheConfig{
-			Workers: 10,
-		},
-	}
 	for i, tc := range cases {
 		t.Run(fmt.Sprintf("%d-%s", i, tc.Name), func(t *testing.T) {
 			flags := pflag.NewFlagSet("test-flags", pflag.ExitOnError)
-			opts := optsFromFlags(flags, cf)
+			opts := optsFromFlags(flags)
 			err := flags.Parse(tc.Args)
 			remainingArgs := flags.Args()
 			tasks, passThroughArgs := parseTasksAndPassthroughArgs(remainingArgs, flags)
@@ -319,46 +296,6 @@ func TestParseConfig(t *testing.T) {
 			assert.EqualValues(t, tc.ExpectedTasks, tasks)
 		})
 	}
-}
-
-func TestParseRunOptionsUsesCWDFlag(t *testing.T) {
-	defaultCwd, err := fs.GetCwd()
-	if err != nil {
-		t.Errorf("failed to get cwd: %v", err)
-	}
-	cwd := defaultCwd.Join("zop")
-	expected := &Opts{
-		runOpts: runOpts{
-			concurrency: 10,
-		},
-		cacheOpts: cache.Opts{
-			OverrideDir: cwd.Join("node_modules", ".cache", "turbo"),
-			Workers:     10,
-		},
-		runcacheOpts: runcache.Opts{},
-		scopeOpts:    scope.Opts{},
-	}
-
-	t.Run("accepts cwd argument", func(t *testing.T) {
-		cf := &config.Config{
-			Cwd: cwd,
-			Cache: &config.CacheConfig{
-				Workers: 10,
-			},
-		}
-		flags := pflag.NewFlagSet("test-flags", pflag.ExitOnError)
-		opts := optsFromFlags(flags, cf)
-		err := flags.Parse([]string{"foo", "--cwd=zop"})
-		// Note that the Run parsing actually ignores `--cwd=` arg since
-		// the `--cwd=` is parsed when setting up the global Config. This value is
-		// passed directly as an argument to the parser.
-		// We still need to ensure run accepts cwd flag and doesn't error.
-		if err != nil {
-			t.Fatalf("invalid parse: %#v", err)
-		}
-		assert.EqualValues(t, expected, opts)
-	})
-
 }
 
 func Test_dontSquashTasks(t *testing.T) {
@@ -424,25 +361,4 @@ func Test_taskSelfRef(t *testing.T) {
 	if err == nil {
 		t.Fatalf("expected to failed to build task graph: %v", err)
 	}
-}
-
-func TestUsageText(t *testing.T) {
-	defaultCwd, err := fs.GetCwd()
-	if err != nil {
-		t.Fatalf("failed to get cwd: %v", err)
-	}
-	cf := &config.Config{
-		Cwd: defaultCwd,
-		Cache: &config.CacheConfig{
-			Workers: 10,
-		},
-	}
-	output := ui.Default()
-	cmd := &RunCommand{
-		Config: cf,
-		UI:     output,
-	}
-	// just ensure it doesn't panic for now
-	usage := cmd.Help()
-	assert.NotEmpty(t, usage, "expected usage text")
 }
