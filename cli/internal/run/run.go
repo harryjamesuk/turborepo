@@ -47,13 +47,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-// // RunCommand is a Command implementation that tells Turbo to run a task
-// type RunCommand struct {
-// 	Config        *config.Config
-// 	UI            *cli.ColoredUi
-// 	SignalWatcher *signals.Watcher
-// }
-
 // completeGraph represents the common state inferred from the filesystem and pipeline.
 // It is not intended to include information specific to a particular run.
 type completeGraph struct {
@@ -166,34 +159,6 @@ func configureRun(base *cmdutil.CmdBase, opts *Opts, signalWatcher *signals.Watc
 		processes: processes,
 	}
 }
-
-// // Synopsis of run command
-// func (c *RunCommand) Synopsis() string {
-// 	cmd := getCmd(c.Config, c.UI, c.SignalWatcher)
-// 	return cmd.Short
-// }
-
-// // Help returns information about the `run` command
-// func (c *RunCommand) Help() string {
-// 	cmd := getCmd(c.Config, c.UI, c.SignalWatcher)
-// 	return util.HelpForCobraCmd(cmd)
-// }
-
-// // Run executes tasks in the monorepo
-// func (c *RunCommand) Run(args []string) int {
-// 	cmd := getCmd(c.Config, c.UI, c.SignalWatcher)
-// 	cmd.SetArgs(args)
-// 	err := cmd.Execute()
-// 	if err != nil {
-// 		exitErr := &process.ChildExit{}
-// 		if errors.As(err, &exitErr) {
-// 			return exitErr.ExitCode
-// 		}
-// 		c.logError(c.Config.Logger, "", err)
-// 		return 1
-// 	}
-// 	return 0
-// }
 
 type run struct {
 	base      *cmdutil.CmdBase
@@ -647,21 +612,8 @@ func getDefaultOptions() *Opts {
 		runOpts: runOpts{
 			concurrency: 10,
 		},
-		//cacheOpts: cache.Opts{},
-		//scopeOpts: scope.Opts{},
 	}
 }
-
-// // logError logs an error and outputs it to the UI.
-// func (c *RunCommand) logError(log hclog.Logger, prefix string, err error) {
-// 	log.Error(prefix, "error", err)
-
-// 	if prefix != "" {
-// 		prefix += ": "
-// 	}
-
-// 	c.UI.Error(fmt.Sprintf("%s%s%s", ui.ERROR_PREFIX, prefix, color.RedString(" %v", err)))
-// }
 
 // logError logs an error and outputs it to the UI.
 func (r *run) logWarning(prefix string, err error) {

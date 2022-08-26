@@ -9,7 +9,6 @@ import (
 	"reflect"
 
 	"github.com/adrg/xdg"
-	"github.com/spf13/pflag"
 )
 
 // AbsolutePath represents a platform-dependent absolute path on the filesystem,
@@ -242,41 +241,4 @@ func GetTurboDataDir() AbsolutePath {
 func GetUserConfigDir() AbsolutePath {
 	configHome := AbsolutePathFromUpstream(xdg.ConfigHome)
 	return configHome.Join("turborepo")
-}
-
-// TODO(gsoltis): delete this, not needed
-type pathValue struct {
-	base     AbsolutePath
-	current  *AbsolutePath
-	defValue string
-}
-
-func (pv *pathValue) String() string {
-	if *pv.current == "" {
-		return ResolveUnknownPath(pv.base, pv.defValue).ToString()
-	}
-	return pv.current.ToString()
-}
-
-func (pv *pathValue) Set(value string) error {
-	*pv.current = ResolveUnknownPath(pv.base, value)
-	return nil
-}
-
-func (pv *pathValue) Type() string {
-	return "path"
-}
-
-var _ pflag.Value = &pathValue{}
-
-// AbsolutePathVar adds a flag interpreted as an absolute path to the given FlagSet.
-// It currently requires a root because relative paths are interpreted relative to the
-// given root.
-func AbsolutePathVar(flags *pflag.FlagSet, target *AbsolutePath, name string, root AbsolutePath, usage string, defValue string) {
-	value := &pathValue{
-		base:     root,
-		current:  target,
-		defValue: defValue,
-	}
-	flags.Var(value, name, usage)
 }

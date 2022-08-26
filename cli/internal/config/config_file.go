@@ -57,10 +57,6 @@ func (rc *RepoConfig) Delete() error {
 	return rc.path.Remove()
 }
 
-// func AddUserConfigFlags(userConfig *TurborepoConfig, flags *pflag.FlagSet) {
-// 	flags.StringVar(&userConfig.ApiUrl, "api", userConfig.ApiUrl, "Set the endpoint for API calls")
-// }
-
 // UserConfig is a wrapper around the user-specific configuration values
 // for Turborepo.
 type UserConfig struct {

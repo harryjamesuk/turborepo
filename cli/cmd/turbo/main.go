@@ -66,11 +66,7 @@ func main() {
 	// }
 
 	c.HiddenCommands = []string{"graph"}
-	c.Commands = map[string]cli.CommandFactory{
-		// "prune": func() (cli.Command, error) {
-		// 	return &prune.PruneCommand{Config: cf, Ui: ui}, nil
-		// },
-	}
+	c.Commands = map[string]cli.CommandFactory{}
 
 	// Capture the defer statements below so the "done" message comes last
 	exitCode := 1

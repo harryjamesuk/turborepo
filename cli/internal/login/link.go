@@ -23,6 +23,7 @@ import (
 type link struct {
 	base                *cmdutil.CmdBase
 	modifyGitIgnore     bool
+	apiClient           linkAPIClient // separate from base to allow testing
 	promptSetup         func(location string) (bool, error)
 	promptTeam          func(teams []string) (string, error)
 	promptEnableCaching func() (bool, error)
@@ -49,8 +50,6 @@ func getCmd(helper *cmdutil.Helper) *cobra.Command {
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// apiClient := config.NewClient()
-			//terminal := helper.GetUI()
 			base, err := helper.GetCmdBase(cmd.Flags())
 			if err != nil {
 				return err
@@ -58,6 +57,7 @@ func getCmd(helper *cmdutil.Helper) *cobra.Command {
 			link := &link{
 				base:                base,
 				modifyGitIgnore:     !dontModifyGitIgnore,
+				apiClient:           base.APIClient,
 				promptSetup:         promptSetup,
 				promptTeam:          promptTeam,
 				promptEnableCaching: promptEnableCaching,
@@ -109,15 +109,15 @@ func (l *link) run() error {
 		return errUserCanceled
 	}
 
-	if !l.base.APIClient.IsLoggedIn() {
+	if !l.apiClient.IsLoggedIn() {
 		return fmt.Errorf(util.Sprintf("User not found. Please login to Turborepo first by running ${BOLD}`npx turbo login`${RESET}."))
 	}
 
-	teamsResponse, err := l.base.APIClient.GetTeams()
+	teamsResponse, err := l.apiClient.GetTeams()
 	if err != nil {
 		return fmt.Errorf("could not get team information.\n%w", err)
 	}
-	userResponse, err := l.base.APIClient.GetUser()
+	userResponse, err := l.apiClient.GetUser()
 	if err != nil {
 		return fmt.Errorf("could not get user information.\n%w", err)
 	}
@@ -154,9 +154,9 @@ func (l *link) run() error {
 		}
 		teamID = chosenTeam.ID
 	}
-	l.base.APIClient.SetTeamID(teamID)
+	l.apiClient.SetTeamID(teamID)
 
-	cachingStatus, err := l.base.APIClient.GetCachingStatus()
+	cachingStatus, err := l.apiClient.GetCachingStatus()
 	if err != nil {
 		return err
 	}
