@@ -530,16 +530,10 @@ func addRunOpts(opts *runOpts, flags *pflag.FlagSet, aliases map[string]string) 
 }
 
 var _persistentFlags = []string{
-	// "team",
-	// "token",
-	// "preflight",
-	// "api",
-	// "url",
 	"trace",
 	"cpuprofile",
 	"heap",
 	"no-gc",
-	// "cwd",
 }
 
 func noopPersistentOptsDuringMigration(flags *pflag.FlagSet) {

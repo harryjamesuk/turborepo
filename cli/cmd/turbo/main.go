@@ -1,21 +1,17 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"runtime/debug"
 	"strings"
 	"time"
 
 	"github.com/vercel/turborepo/cli/internal/cmd"
-	"github.com/vercel/turborepo/cli/internal/config"
-	prune "github.com/vercel/turborepo/cli/internal/prune"
 	"github.com/vercel/turborepo/cli/internal/signals"
 	"github.com/vercel/turborepo/cli/internal/ui"
 	uiPkg "github.com/vercel/turborepo/cli/internal/ui"
 	"github.com/vercel/turborepo/cli/internal/util"
 
-	"github.com/fatih/color"
 	"github.com/mitchellh/cli"
 )
 
@@ -63,21 +59,17 @@ func main() {
 	c.ErrorWriter = os.Stderr
 	// Parse and validate cmd line flags and env vars
 	// Note that cf can be nil
-	cf, err := config.ParseAndValidate(c.Args, ui, turboVersion, config.DefaultUserConfigPath())
-	if err != nil {
-		ui.Error(fmt.Sprintf("%s %s", uiPkg.ERROR_PREFIX, color.RedString(err.Error())))
-		os.Exit(1)
-	}
+	// cf, err := config.ParseAndValidate(c.Args, ui, turboVersion, config.DefaultUserConfigPath())
+	// if err != nil {
+	// 	ui.Error(fmt.Sprintf("%s %s", uiPkg.ERROR_PREFIX, color.RedString(err.Error())))
+	// 	os.Exit(1)
+	// }
 
 	c.HiddenCommands = []string{"graph"}
 	c.Commands = map[string]cli.CommandFactory{
-		// "run": func() (cli.Command, error) {
-		// 	return &run.RunCommand{Config: cf, UI: ui, SignalWatcher: signalWatcher},
-		// 		nil
+		// "prune": func() (cli.Command, error) {
+		// 	return &prune.PruneCommand{Config: cf, Ui: ui}, nil
 		// },
-		"prune": func() (cli.Command, error) {
-			return &prune.PruneCommand{Config: cf, Ui: ui}, nil
-		},
 	}
 
 	// Capture the defer statements below so the "done" message comes last
